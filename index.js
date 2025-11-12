@@ -8,9 +8,10 @@ const app = express()
 
 app.use(express.json())
 app.use(cors({
-    credentials: true,
-    origin: ['https://darbazdev.vercel.app', 'http://localhost:5173'],
-}))
+  origin: process.env.CLIENT_URL, // this must match your Vercel URL
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
 
 app.get('/', (req, res) => {
     res.json({ message: 'Backend is running!' })
