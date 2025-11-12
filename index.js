@@ -8,7 +8,7 @@ const app = express()
 app.use(express.json())
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
+    origin: ['https://portfolio-frontend-seven-fawn.vercel.app', 'http://localhost:5173'],
 }))
 
 app.post('/api/contact', async (req,res) => {
