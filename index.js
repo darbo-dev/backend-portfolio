@@ -1,68 +1,46 @@
-import express from 'express'
-import dotenv from 'dotenv'
-dotenv.config()
-import nodemailer from 'nodemailer'
-import cors from 'cors'
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
-const app = express()
+dotenv.config();
 
-app.use(express.json())
+const app = express();
+app.use(express.json());
 app.use(cors({
-  origin: process.env.CLIENT_URL, // this must match your Vercel URL
-  methods: ["GET", "POST"],
+  origin: ["https://darbazdev.vercel.app"],
+  methods: ["POST", "GET"],
   credentials: true,
 }));
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Backend is running!' })
-})
+app.get("/", (req, res) => res.send("Backend running ✅"));
 
-app.post('/api/contact', async (req, res) => {
-    const { name, email, message } = req.body
-    if (!name || !email || !message) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields required"
-        })
-    }
+app.post("/api/contact", async (req, res) => {
+  const { name, email, message } = req.body;
 
-    try {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.resend.com",
+      port: 587,
+      auth: {
+        user: "resend",
+        pass: process.env.RESEND_API_KEY,
+      },
+    });
 
-        if (!process.env.USER_EMAIL || !process.env.APP_PASSWORD) {
-            console.log('Missing email credentials')
-            return res.status(500).json({
-                success: false,
-                message: "Email service not configured"
-            })
-        }
+    await transporter.sendMail({
+      from: "portfolio@resend.dev", 
+      to: "darborzgar7@gmail.com", 
+      subject: `Portfolio Message from ${name}`,
+      text: `From: ${email}\n\n${message}`,
+    });
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.USER_EMAIL,
-                pass: process.env.APP_PASSWORD
-            }
-        })
-
-        const mailOptions = {
-            from: email,
-            to: 'darborzgar7@gmail.com',
-            subject: `New message from ${email}`,
-            text: `Name: ${name} \nEmail: ${email} \nMessage: ${message}`
-        }
-
-        await transporter.sendMail(mailOptions)
-        res.status(200).json({ success: true, message: "Message sent successfully!" });
-
-    } catch (error) {
-        console.error('Email error:', error)
-        res.status(500).json({ success: false, message: error });
-    }
-})
-
+    res.status(200).json({ success: true, message: "Message sent successfully ✅" });
+  } catch (error) {
+    console.error("Email error:", error);
+    res.status(500).json({ success: false, message: "Failed to send message ❌" });
+  }
+});
 
 const PORT = process.env.PORT || 8000;
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`)
-})
+app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
